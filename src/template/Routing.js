@@ -31,7 +31,7 @@ function Routing() {
 
                 <Routes>
                     <Route path="/mhs" element={<Mahasiswa />} />
-                    <Route path="/mjrs" element={<Jurusan />} />
+                    <Route path="/jrs" element={<Jurusan />} />
                 </Routes>
 
             </div>
