@@ -18,10 +18,10 @@ function Mahasiswa() {
   const url = "http://localhost:3000/static/";
 
   useEffect(() => {
-    fectData();
+    fetchData();
   }, []);
 
-  const fectData = async () => {
+  const fetchData = async () => {
     try {
       const response1 = await axios.get("http://localhost:3000/api/mhs");
       const data1 = await response1.data.data;
@@ -81,13 +81,81 @@ function Mahasiswa() {
         },
       });
       navigate("/mhs");
-      fectData();
+      fetchData();
     } catch (error) {
       console.error("Kesalahan: ", error);
       setValidation(error.response.data);
     }
   };
 
+  const [editData, setEditData] = useState({
+    id: null,
+    nama: "",
+    nrp: "",
+    id_jurusan: "",
+    gambar: null,
+    swa_foto: null,
+  });
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const handleShowEditModal = (data) => {
+    setEditData(data);
+    setShowEditModal(true);
+    setShow(false);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditData({
+      id: null,
+      nama: "",
+      nrp: "",
+      id_jurusan: "",
+      gambar: null,
+      swa_foto: null,
+    });
+  };
+
+  const handleEditDataChange = (field, value) => {
+    setEditData((prevData) => ({
+      ...prevData,
+      [field]: value,
+    }));
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("id", editData.id);
+    formData.append("nama", editData.nama);
+    formData.append("nrp", editData.nrp);
+    formData.append("id_jurusan", editData.id_jurusan);
+    if (editData.gambar) {
+      formData.append("gambar", editData.gambar);
+    }
+    if (editData.swa_foto) {
+      formData.append("swa_foto", editData.swa_foto);
+    }
+
+    try {
+      await axios.patch(`http://localhost:3000/api/mhs/update/${editData.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      navigate("/mhs");
+      fetchData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error("Kesalahan:", error);
+      setValidation(error.response.data);
+    }
+  };
+ 
+  
+  
   return (
     <Container>
       <Row>
@@ -102,23 +170,30 @@ function Mahasiswa() {
             <tr>
               <th scope="col">No</th>
               <th scope="col">Nama</th>
+              <th scope="col">NRP</th>
               <th scope="col">Jurusan</th>
-              <th scope="col">gambar</th>
-              <th scope="col">swa_foto</th>
+              <th scope="col">Gambar</th>
+              <th scope="col">Swa Foto</th>
             </tr>
           </thead>
 
           <tbody>
             {mhs.map((mh, index) => (
-              <tr>
+              <tr key={mh.id}>
                 <td>{index + 1}</td>
                 <td>{mh.nama}</td>
+                <td>{mh.nrp}</td>
                 <td>{mh.jurusan}</td>
                 <td>
-                  <img src={url + mh.gambar} height="100" />
+                  <img src={url + mh.gambar} height="100" alt={mh.nama} />
                 </td>
                 <td>
-                  <img src={url + mh.swa_foto} height="100" />
+                  <img src={url + mh.swa_foto} height="100" alt={mh.nama} />
+                </td>
+                <td>
+                  <button onClick={() => handleShowEditModal(mh)} className="btn btn-sm btn-info">
+                    Edit
+                  </button>
                 </td>
               </tr>
             ))}
@@ -126,9 +201,7 @@ function Mahasiswa() {
         </table>
       </Row>
       <Row>
-        <Table striped bordered hover>
-          {/* Tabel Mahasiswa */}
-        </Table>
+        <Table striped bordered hover></Table>
       </Row>
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -138,28 +211,58 @@ function Mahasiswa() {
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <label className="form-label">Nama:</label>
-              <input
-                type="text"
-                className="form-control"
-                value={nama}
-                onChange={handleNamaChange}
-              />
+              <input  type="text" className="form-control"  value={nama} onChange={handleNamaChange} />
             </div>
             <div className="mb-3">
               <label className="form-label">NRP:</label>
-              <input
-                type="text"
-                className="form-control"
-                value={nrp}
-                onChange={handleNrpChange}
-              />
+              <input  type="text"  className="form-control" value={nrp}  onChange={handleNrpChange}  />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Jurusan:</label>
+              <select className="form-select"  value={id_jurusan} onChange={handleIdJurusanChange} >
+                {jrs.map((jr) => (
+                  <option key={jr.id_j} value={jr.id_j}>
+                    {jr.nama_jurusan}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Gambar:</label>
+              <input type="file" className="form-control" accept="image/*" onChange={handleGambarChange} />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Swa Foto:</label>
+              <input type="file" className="form-control" accept="image/*" onChange={handleSwaFotoChange} />
+            </div>
+            <button onClick={handleClose} type="submit" className="btn btn-primary">
+              Kirim
+            </button>
+          </form>
+        </Modal.Body>
+      </Modal>
+      <Modal show={showEditModal} onHide={handleCloseEditModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Data</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <form onSubmit={handleUpdate}>
+            <div className="mb-3">
+              <label className="form-label">Nama:</label>
+              <input  type="text" className="form-control"value={editData ? editData.nama : ''} 
+               onChange={(e) => handleEditDataChange('nama', e.target.value)}  />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">NRP:</label>
+              <input  type="text"  className="form-control" value={editData ? editData.nrp : ''}  
+              onChange={(e) => handleEditDataChange('nrp', e.target.value)}  />
             </div>
             <div className="mb-3">
               <label className="form-label">Jurusan:</label>
               <select
                 className="form-select"
-                value={id_jurusan}
-                onChange={handleIdJurusanChange}
+                value={editData ? editData.id_jurusan : ''}
+                onChange={(e) => handleEditDataChange('id_jurusan', e.target.value)}
               >
                 {jrs.map((jr) => (
                   <option key={jr.id_j} value={jr.id_j}>
@@ -174,7 +277,7 @@ function Mahasiswa() {
                 type="file"
                 className="form-control"
                 accept="image/*"
-                onChange={handleGambarChange}
+                onChange={(e) => handleEditDataChange('gambar', e.target.files[0])}
               />
             </div>
             <div className="mb-3">
@@ -183,10 +286,12 @@ function Mahasiswa() {
                 type="file"
                 className="form-control"
                 accept="image/*"
-                onChange={handleSwaFotoChange}
+                onChange={(e) => handleEditDataChange('swa_foto', e.target.files[0])}
               />
             </div>
-            <button onClick={handleClose} type="submit" className="btn btn-primary">Kirim</button>
+            <button type="submit" className="btn btn-primary">
+              Simpan Perubahan
+            </button>
           </form>
         </Modal.Body>
       </Modal>
@@ -194,4 +299,4 @@ function Mahasiswa() {
   );
 }
 
-export default Mahasiswa;
+export default Mahasiswa;
