@@ -155,6 +155,20 @@ function Mahasiswa() {
   };
  
   
+  const handleDelete = (id) => {
+    axios
+     .delete(`http://localhost:3000/api/mhs/delete/${id}`)
+     .then((response) => {
+       console.log('Data berhasil di hapus');
+       //Hapus iten dari array data mhs
+       const updatedMhs = mhs.filter((item) => item.id !==id);
+       setMhs(updatedMhs); //perbarui state data
+     })
+     .catch((error) => {
+       console.error('Gagal menghapus data:', error);
+       alert('Gagal menghapus data. Silahkan coba lagi');
+     });
+      };
   
   return (
     <Container>
@@ -174,6 +188,7 @@ function Mahasiswa() {
               <th scope="col">Jurusan</th>
               <th scope="col">Gambar</th>
               <th scope="col">Swa Foto</th>
+              <th scope="col" colSpan={2}>Action</th> 
             </tr>
           </thead>
 
@@ -194,6 +209,11 @@ function Mahasiswa() {
                   <button onClick={() => handleShowEditModal(mh)} className="btn btn-sm btn-info">
                     Edit
                   </button>
+                </td>
+                <td> 
+                    <button onClick={() => handleDelete(mh.id)} className='btn btn-sm btn-danger' >
+                        Hapus
+                    </button>
                 </td>
               </tr>
             ))}
@@ -241,6 +261,7 @@ function Mahasiswa() {
           </form>
         </Modal.Body>
       </Modal>
+
       <Modal show={showEditModal} onHide={handleCloseEditModal}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Data</Modal.Title>
@@ -262,8 +283,7 @@ function Mahasiswa() {
               <select
                 className="form-select"
                 value={editData ? editData.id_jurusan : ''}
-                onChange={(e) => handleEditDataChange('id_jurusan', e.target.value)}
-              >
+                onChange={(e) => handleEditDataChange('id_jurusan', e.target.value)} >
                 {jrs.map((jr) => (
                   <option key={jr.id_j} value={jr.id_j}>
                     {jr.nama_jurusan}
@@ -273,21 +293,13 @@ function Mahasiswa() {
             </div>
             <div className="mb-3">
               <label className="form-label">Gambar:</label>
-              <input
-                type="file"
-                className="form-control"
-                accept="image/*"
-                onChange={(e) => handleEditDataChange('gambar', e.target.files[0])}
-              />
+              <input  type="file"  className="form-control"   accept="image/*"
+                onChange={(e) => handleEditDataChange('gambar', e.target.files[0])} />
             </div>
             <div className="mb-3">
               <label className="form-label">Swa Foto:</label>
-              <input
-                type="file"
-                className="form-control"
-                accept="image/*"
-                onChange={(e) => handleEditDataChange('swa_foto', e.target.files[0])}
-              />
+              <input type="file" className="form-control" accept="image/*"
+                onChange={(e) => handleEditDataChange('swa_foto', e.target.files[0])} />
             </div>
             <button type="submit" className="btn btn-primary">
               Simpan Perubahan
