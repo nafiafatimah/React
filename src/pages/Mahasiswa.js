@@ -3,6 +3,7 @@ import { Container, Row, Col, Table, Button, Modal } from "react-bootstrap";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
+const token = localStorage.getItem('token');
 
 function Mahasiswa() {
   const [mhs, setMhs] = useState([]);
@@ -18,20 +19,24 @@ function Mahasiswa() {
   const url = "http://localhost:3000/static/";
 
   useEffect(() => {
-    fetchData();
+    fectData();
   }, []);
 
-  const fetchData = async () => {
+  const fectData = async () => {
+      
     try {
-      const response1 = await axios.get("http://localhost:3000/api/mhs");
-      const data1 = await response1.data.data;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+      const response1 = await axios.get('http://localhost:3000/api/mhs',{headers});
+      const response2 = await axios.get('http://localhost:3000/api/jurusan',{headers});
+      const data1 = response1.data.data;
+      const data2 = response2.data.data;
       setMhs(data1);
-
-      const response2 = await axios.get("http://localhost:3000/api/jrs");
-      const data2 = await response2.data.data;
       setJrsn(data2);
     } catch (error) {
-      console.error("Kesalahan: ", error);
+      // Tangani kesalahan permintaan data
+      console.error('Gagal mengambil data:', error);
     }
   };
 
@@ -78,10 +83,11 @@ function Mahasiswa() {
       await axios.post("http://localhost:3000/api/mhs/store", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          'Authorization': `Bearer ${token}`,
         },
       });
       navigate("/mhs");
-      fetchData();
+      fectData();
     } catch (error) {
       console.error("Kesalahan: ", error);
       setValidation(error.response.data);
@@ -142,11 +148,12 @@ function Mahasiswa() {
       await axios.patch(`http://localhost:3000/api/mhs/update/${editData.id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          'Authorization': `Bearer ${token}`,
         },
       });
 
       navigate("/mhs");
-      fetchData();
+      fectData();
       setShowEditModal(false);
     } catch (error) {
       console.error("Kesalahan:", error);
@@ -157,18 +164,22 @@ function Mahasiswa() {
   
   const handleDelete = (id) => {
     axios
-     .delete(`http://localhost:3000/api/mhs/delete/${id}`)
-     .then((response) => {
-       console.log('Data berhasil di hapus');
-       //Hapus iten dari array data mhs
-       const updatedMhs = mhs.filter((item) => item.id !==id);
-       setMhs(updatedMhs); //perbarui state data
-     })
-     .catch((error) => {
-       console.error('Gagal menghapus data:', error);
-       alert('Gagal menghapus data. Silahkan coba lagi');
-     });
-      };
+      .delete(`http://localhost:3000/api/mhs/delete/${id}`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      })
+      .then((response) => {
+        console.log('Data berhasil dihapus');
+        // Hapus item dari array data mhs
+        const updatedMhs = mhs.filter((item) => item.id !== id);
+        setMhs(updatedMhs); // Perbarui state dengan data yang sudah diperbarui
+      })
+      .catch((error) => {
+        console.error('Gagal menghapus data:', error);
+        alert('Gagal menghapus data. Silakan coba lagi atau hubungi administrator.');
+      });
+  };
   
   return (
     <Container>
